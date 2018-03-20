@@ -1,80 +1,361 @@
 "use strict";
 
 function Obj (a,b) {
-      var _type = a;
-      var _model = b;
-      var _state = false;
-
-    this.on = function() {
-      _state = true;
-    }
-    this.off = function() {
-      _state = false;
-     }
-    this.getState = function() {
-       return _state;
-    }
-    this.getModel = function() {
-        return _model;
-    }
-    this.getType = function() {
-        return _type;
-    }  
+      this._type = a;
+      this._model = b;
+      this._state = false;
 }
+Obj.prototype.on = function() {
+    this._state = true;
+}
+Obj.prototype.off = function() {
+    this._state = false;
+}
+Obj.prototype.getState = function() {
+    return this._state;
+}
+Obj.prototype.getModel = function() {
+    return this._model;
+}
+Obj.prototype.getType = function() {
+    return this._type;
+}  
+
+//-------------------------------------------
+
+function ObjFridge (a,b) {
+    Obj.call(this, a, b);
+    this._currentTemp = 0;
+}
+
+ObjFridge.prototype = Object.create(Obj.prototype);
+ObjFridge.prototype.constructor = ObjFridge;
+
+ObjFridge.prototype.on = function() {
+    Obj.prototype.on.call(this);
+    var self = this;
+    if(this._currentTemp > -19) {     
+        setTimeout(function(){
+            self._currentTemp -=2;
+        }, 500)
+    }
+};
+
+ObjFridge.prototype.off = function(){
+    Obj.prototype.off.call(this);
+    var self = this;
+    if(this._currentTemp < 0) {    
+        setTimeout(function(){          
+            self._currentTemp +=2;
+        }, 500)
+    }  
+};
+
+ObjFridge.prototype.getCurrentTemp = function() {
+    return this._currentTemp;
+};
+
+//---------------------------------------------
+
+function ObjTV (a,b) {
+    Obj.call(this, a, b);
+    this._curentChannel = 0;
+    this._channels = ["Новый Канал", "1+1", "ТЕТ"];
+};
+
+ObjTV.prototype = Object.create(Obj.prototype); 
+ObjTV.prototype.constructor = ObjTV;
+
+ObjTV.prototype.changeChannel = function(a) {
+    if (this._channels.length -1 <= this._curentChannel && a == "next"){
+        this._curentChannel = 0;
+        return this._channels[this._curentChannel];
+    }
+    else if (this._curentChannel <= 0 && a == "back"){
+        this._curentChannel = this._channels.length - 1;
+        return this._channels[this._curentChannel];
+    }
+    else if (a == "next")
+    {
+        this._curentChannel++;
+        return this._channels[this._curentChannel];
+    }
+    else {
+        this._curentChannel --;
+        return this._channels[this._curentChannel];
+    }
+}
+
+ObjTV.prototype.chageChannelList = function(a) {
+    for (var i =0; i <= this._channels.length -1 ; i ++) {      
+        if (a == this._channels[i]){
+            this._curentChannel = i;
+        }
+    }
+}
+
+ObjTV.prototype.setChannel = function(chanel) {
+    for (var i in this._channels) {
+        if(this._channels[i] == chanel || chanel == "" || chanel == " "){
+            return;       
+        }
+    }
+    this._channels.push(chanel); 
+}
+
+ObjTV.prototype.getChannel = function() {
+    return this._channels[this._curentChannel];
+}
+
+ObjTV.prototype.getListChannel = function () {
+    return this._channels;
+}
+
+//---------------------------------------------
+
+function ObjLight (a,b) {
+    Obj.call(this, a, b);
+    this._light = 0;
+}
+
+ObjLight.prototype = Object.create(Obj.prototype); 
+ObjLight.prototype.constructor = ObjLight;
+
+ObjLight.prototype.setLight = function(a) {
+    this._light = a;
+}
+
+ObjLight.prototype.getLight = function() {
+    return this._light;
+}
+
+//----------------------------------------------
+//View:
 
 function View (obg, rootElement){
     this._objModel = obg;
     this._rootElement = rootElement;
-    var _type = document.createElement("div");
-    var _state = document.createElement("div");
-    var _btnOnOff = document.createElement("div");
-   
-    this._stateChange = function() {
-        _type.innerText = "Объект: " + this._objModel.getType();
-        _state.innerText = "Состояние: " + (this._objModel.getState() ? "вкл." : "выкл.");
-    }
-   
-    this.render = function() {
-        var self = this;
-
-        
-        this.element = document.createElement("div");
-        this.element.className = "element " + this._objModel.getType();
-      
-        var model = document.createElement("div");
-        model.innerText = "Модель: " + this._objModel.getModel();
-
-        var onBtn = document.createElement("button");
-        onBtn.type = "button";
-        onBtn.innerHTML = "Вкл.";
-        onBtn.className = "on";
-        onBtn.onclick = function(){
-            self._objModel.on();
-            self._stateChange();
-        };
-        
-        var offBtn = document.createElement("button");
-        offBtn.type = "button";
-        offBtn.innerHTML = "Выкл.";
-        offBtn.className = "off";
-        offBtn.onclick = function(){
-            self._objModel.off();
-            self._stateChange();
-        };
-
-        this._stateChange();
-
-        this.element.appendChild(_type);
-        this.element.appendChild(model);
-        this.element.appendChild(_state);
-        _btnOnOff.appendChild(onBtn);
-        _btnOnOff.appendChild(offBtn);
-        this.element.appendChild(_btnOnOff);
-        //this.element.appendChild(onBtn);
-        //this.element.appendChild(offBtn);
-        this._rootElement.appendChild(this.element);
-    }
+    this._type = document.createElement("div");
+    this._state = document.createElement("div");
+    this._btnOnOff = document.createElement("div");
 }
+
+View.prototype._stateChange = function() {
+    this._type.innerText = "Объект: " + this._objModel.getType();
+    this._state.innerText = "Состояние: " + (this._objModel.getState() ? "вкл." : "выкл.");
+}
+   
+View.prototype.render = function() {
+    var self = this;
+  
+    this.element = document.createElement("div");
+    this.element.className = "element " + this._objModel.getType();
+    
+    var model = document.createElement("div");
+    model.innerText = "Модель: " + this._objModel.getModel();
+
+    var onBtn = document.createElement("button");
+    onBtn.type = "button";
+    onBtn.innerHTML = "Вкл.";
+    onBtn.className = "on";
+    onBtn.onclick = function(){
+        self._objModel.on();
+        self._stateChange();
+    };
+    
+    var offBtn = document.createElement("button");
+    offBtn.type = "button";
+    offBtn.innerHTML = "Выкл.";
+    offBtn.className = "off";
+    offBtn.onclick = function(){
+        self._objModel.off();
+        self._stateChange();
+    };
+
+    this._stateChange();
+
+    this.element.appendChild(this._type);
+    this.element.appendChild(model);
+    this.element.appendChild(this._state);
+    this._btnOnOff.appendChild(onBtn);
+    this._btnOnOff.appendChild(offBtn);
+    this.element.appendChild(this._btnOnOff);
+    //this.element.appendChild(onBtn);
+    //this.element.appendChild(offBtn);
+    this._rootElement.appendChild(this.element);
+};
+
+//-----------------------------------------------------
+
+function ViewFridge (obg, rootElement) {
+    View.call(this, obg, rootElement);
+    this.ObjFridge = obg;
+    this._temp = document.createElement("div");
+}
+
+ViewFridge.prototype = Object.create(View.prototype); 
+ViewFridge.prototype.constructor = ViewFridge;
+
+ViewFridge.prototype._stateChange = function () {
+    View.prototype._stateChange.call(this);
+    this._temp.innerText = "Темп.: " + this.ObjFridge.getCurrentTemp();
+};
+
+ViewFridge.prototype.render = function () {
+    View.prototype.render.call(this);
+    var count = this.element.children.length;
+    this.element.insertBefore(this._temp, this.element.children[count - 2]);
+};
+
+
+//--------------------------------------------------------
+
+
+function ViewTV (obg, rootElement) {
+    View.call(this, obg, rootElement);
+    this.ObjTV = obg;
+    this._channel = document.createElement("div");
+    this._createSelect = document.createElement("select");
+}
+
+ViewTV.prototype = Object.create(View.prototype); 
+ViewTV.prototype.constructor = ViewTV;
+
+ViewTV.prototype._stateChange = function () {
+    View.prototype._stateChange.call(this);
+    this._channel.innerText = "Канал: " + (this.ObjTV.getState() ? this.ObjTV.getChannel() : "" );
+}
+
+ViewTV.prototype.render = function () {
+    View.prototype.render.call(this);
+    var _formAddChannel = document.createElement("form");
+    var self1 = this.ObjTV;
+    var self = this; 
+
+    var addListChannel = function() {
+        var masChannel = self.ObjTV.getListChannel(); 
+        var children = self._createSelect.childNodes;
+        
+        for (var i = 0; i < masChannel.length; i++) {
+            
+            if (children[i+1] != undefined && children[i+1].value == masChannel[i]) {                 
+                continue;
+            }
+
+            var option = document.createElement("option"); 
+            option.value = masChannel[i];
+            option.innerHTML = masChannel[i];
+            self._createSelect.appendChild(option);  
+        }
+
+        if (self._createSelect[0].value != "Выберите Канал:"){
+            var option = document.createElement("option");
+            option.disabled = true;
+            option.selected = true;
+            option.innerHTML = "Выберите Канал:"
+            self._createSelect.insertBefore(option, self._createSelect.firstChild);
+        }
+
+        self._createSelect.onchange = function(){
+                self.ObjTV.on();
+                self.ObjTV.chageChannelList(self._createSelect.value);
+                self._stateChange();
+        }
+    }
+
+    var chanelInput = function(){   
+        var button = document.createElement("input");
+        var addIn = document.createElement("input");
+        button.type = "button";
+        button.name = "addChannel"
+        button.value = "Добавить канал: ";
+        addIn.name = "addChanel";
+        addIn.id = "addChanel";
+        _formAddChannel.className = "addChannel"
+        _formAddChannel.appendChild(button);
+        _formAddChannel.appendChild(addIn); 
+        button.onclick = function(){
+            self1.setChannel(_formAddChannel.elements.addChanel.value);
+            addIn.value = "";
+            addListChannel();
+        }  
+    }
+
+    var nextChangeBtn = document.createElement("button");
+    nextChangeBtn.type = "button";
+    nextChangeBtn.innerHTML = "Следующий канал";
+    //nextChangeBtn.className = "on";
+    nextChangeBtn.onclick = function(){
+        //if (self.ObjTV.getState() == true){
+            self.ObjTV.on();
+            self.ObjTV.changeChannel("next")
+            self._stateChange();
+        //}
+    };
+
+    var backChangeBtn = document.createElement("button");
+    backChangeBtn.type = "button";
+    backChangeBtn.innerHTML = "Предыдущий канал";
+    backChangeBtn.onclick = function(){
+            self.ObjTV.on();
+            self.ObjTV.changeChannel("back");
+            self._stateChange();
+    };
+
+    chanelInput();
+    addListChannel();
+    var count = this.element.children.length;     
+    this.element.insertBefore(backChangeBtn, this.element.children[count - 1]);
+    this.element.insertBefore(nextChangeBtn, this.element.children[count -1]);
+    this.element.insertBefore(_formAddChannel, this.element.children[count - 1]);
+    this.element.insertBefore(this._createSelect,this.element.children[count - 1]);
+    this.element.insertBefore(this._channel, this.element.children[count -2]);  
+}
+
+
+//---------------------------------------------------------------
+
+function ViewLight (obg, rootElement) {
+    View.call(this, obg, rootElement);
+    this.ObjLight = obg;
+    this._light = document.createElement("div");
+    
+}
+ViewLight.prototype = Object.create(View.prototype); 
+ViewLight.prototype.constructor = ViewLight;
+
+ViewLight.prototype._stateChange = function () {
+    View.prototype._stateChange.call(this);
+    this._light.innerText = "Процент Света: " + (this.ObjLight.getState() ? this.ObjLight.getLight() : "" );
+}
+
+ViewLight.prototype.render = function () {
+    View.prototype.render.call(this);
+    var self = this;
+    var range = document.createElement("input");
+
+    var rangLight = function () {
+        range.type = "range";
+        range.oninput = function(){
+            self.ObjLight.on();
+            self.ObjLight.setLight(range.value);
+            self._stateChange();
+            if (range.value == 0) {
+                self.ObjLight.off();
+                self._stateChange();
+            }
+        }
+    }
+
+    rangLight();
+    this._stateChange();
+    var count = this.element.children.length; 
+    this.element.insertBefore(range, this.element.children[count -1]);
+    this.element.insertBefore(this._light, this.element.children[count -1]);
+        
+}
+
+//------------------------------------------------------------------
 
 function FormAdd (){
     var _addElement = document.getElementById("add")
@@ -187,267 +468,6 @@ function FormAdd (){
     _addElement.appendChild(_form);
 }
 
-function ObjFridge (a,b) {
-    Obj.call(this, a, b);
-    var _currentTemp = 0;
-
-    var parentOn = this.on;
-    this.on = function() {
-        parentOn.call(this);
-        if(_currentTemp > -19) {     
-            setTimeout(function(){
-                _currentTemp -=2;
-            }, 500)
-        }
-    }
-
-    var parentOff = this.off;
-    this.off = function(){
-        parentOff.call(this);
-        if(_currentTemp < 0) {    
-            setTimeout(function(){
-                _currentTemp +=2;
-            }, 500)
-        }  
-    }
-
-
-
-    this.getCurrentTemp = function() {
-        return _currentTemp;
-    }
-}
-
-function ViewFridge (obg, rootElement) {
-    View.call(this, obg, rootElement);
-    this.ObjFridge = obg;
-    var _temp = document.createElement("div");
-    
-    var parentStateChange = this._stateChange;
-    this._stateChange = function () {
-        parentStateChange.call(this);
-        _temp.innerText = "Темп.: " + this.ObjFridge.getCurrentTemp();
-    }
-
-    var parentRender = this.render;
-    this.render = function () {
-        parentRender.call(this);
-        var count = this.element.children.length;
-        this.element.insertBefore(_temp, this.element.children[count - 2]);
-    }
-}
-
-function ObjTV (a,b) {
-    Obj.call(this, a, b);
-    var _curentChannel = 0;
-    var _channels = ["Новый Канал", "1+1", "ТЕТ"];
-
-    var parentOff = this.off;
-    this.off = function(){
-        parentOff.call(this);
-    }
-
-    this.changeChannel = function(a) {
-        if (_channels.length -1 <= _curentChannel && a == "next"){
-            _curentChannel = 0;
-            return _channels[_curentChannel];
-        }
-        else if (_curentChannel <= 0 && a == "back"){
-            _curentChannel = _channels.length - 1;
-            return _channels[_curentChannel];
-        }
-        else if (a == "next")
-        {
-            _curentChannel++;
-            return _channels[_curentChannel];
-        }
-        else {
-            _curentChannel --;
-            return _channels[_curentChannel];
-        }
-    }
-
-    this.chageChannelList = function(a) {
-        for (var i =0; i <= _channels.length -1 ; i ++) {      
-            if (a == _channels[i]){
-                _curentChannel = i;
-            }
-        }
-    }
-
-    this.setChannel = function(chanel) {
-        for (var i in _channels) {
-            if(_channels[i] == chanel || chanel == "" || chanel == " "){
-                return;       
-            }
-        }
-        _channels.push(chanel); 
-    }
-
-    this.getChannel = function() {
-        return _channels[_curentChannel];
-    }
-
-    this.getListChannel = function () {
-        return _channels;
-    }
-}
-
-function ViewTV (obg, rootElement) {
-    View.call(this, obg, rootElement);
-    this.ObjTV = obg;
-    var _channel = document.createElement("div");
-    var createSelect = document.createElement("select");
-
-    var parentStateChange = this._stateChange;
-    this._stateChange = function () {
-        parentStateChange.call(this);
-        _channel.innerText = "Канал: " + (this.ObjTV.getState() ? this.ObjTV.getChannel() : "" );
-    }
-
-    var parentRender = this.render;
-    this.render = function () {
-        parentRender.call(this);
-        var _formAddChannel = document.createElement("form");
-        var self1 = this.ObjTV;
-        var self = this; 
-
-        var addListChannel = function() {
-            var masChannel = self.ObjTV.getListChannel(); 
-            var children = createSelect.childNodes;
-            
-            for (var i = 0; i < masChannel.length; i++) {
-                
-                if (children[i+1] != undefined && children[i+1].value == masChannel[i]) {                 
-                    continue;
-                }
-
-                var option = document.createElement("option"); 
-                option.value = masChannel[i];
-                option.innerHTML = masChannel[i];
-                createSelect.appendChild(option);  
-            }
-
-            if (createSelect[0].value != "Выберите Канал:"){
-                var option = document.createElement("option");
-                option.disabled = true;
-                option.selected = true;
-                option.innerHTML = "Выберите Канал:"
-                createSelect.insertBefore(option, createSelect.firstChild);
-            }
-
-            createSelect.onchange = function(){
-                    self.ObjTV.on();
-                    self.ObjTV.chageChannelList(createSelect.value);
-                    self._stateChange();
-            }
-        }
-
-        var chanelInput = function(){   
-            var button = document.createElement("input");
-            var addIn = document.createElement("input");
-            button.type = "button";
-            button.name = "addChannel"
-            button.value = "Добавить канал: ";
-            addIn.name = "addChanel";
-            addIn.id = "addChanel";
-            _formAddChannel.className = "addChannel"
-            _formAddChannel.appendChild(button);
-            _formAddChannel.appendChild(addIn); 
-            button.onclick = function(){
-                self1.setChannel(_formAddChannel.elements.addChanel.value);
-                addIn.value = "";
-                addListChannel();
-            }  
-        }
-
-        var nextChangeBtn = document.createElement("button");
-        nextChangeBtn.type = "button";
-        nextChangeBtn.innerHTML = "Следующий канал";
-        //nextChangeBtn.className = "on";
-        nextChangeBtn.onclick = function(){
-            //if (self.ObjTV.getState() == true){
-                self.ObjTV.on();
-                self.ObjTV.changeChannel("next")
-                self._stateChange();
-            //}
-        };
-
-        var backChangeBtn = document.createElement("button");
-        backChangeBtn.type = "button";
-        backChangeBtn.innerHTML = "Предыдущий канал";
-        //backChangeBtn.className = "off";
-        backChangeBtn.onclick = function(){
-            //if (self.ObjTV.getState() == true){
-                self.ObjTV.on();
-                self.ObjTV.changeChannel("back");
-                self._stateChange();
-            //}
-        };
-
-        chanelInput();
-        addListChannel();
-        var count = this.element.children.length;     
-        this.element.insertBefore(backChangeBtn, this.element.children[count - 1]);
-        this.element.insertBefore(nextChangeBtn, this.element.children[count -1]);
-        this.element.insertBefore(_formAddChannel, this.element.children[count - 1]);
-        this.element.insertBefore(createSelect,this.element.children[count - 1]);
-        this.element.insertBefore(_channel, this.element.children[count -2]);  
-    }
-}
-
-function ObjLight (a,b) {
-    Obj.call(this, a, b);
-
-    var _light = 0;
-
-    this.setLight = function(a) {
-        _light = a;
-    }
-
-    this.getLight = function() {
-        return _light;
-    }
-}
-
-function ViewLight (obg, rootElement) {
-    View.call(this, obg, rootElement);
-    this.ObjLight = obg;
-    var _light = document.createElement("div");
-
-    var parentStateChange = this._stateChange;
-    this._stateChange = function () {
-        parentStateChange.call(this);
-        _light.innerText = "Процент Света: " + (this.ObjLight.getState() ? this.ObjLight.getLight() : "" );
-    }
-
-    var parentRender = this.render;
-    this.render = function () {
-        parentRender.call(this);
-        var self = this;
-        var range = document.createElement("input");
-
-        var rangLight = function () {
-            range.type = "range";
-            range.oninput = function(){
-                self.ObjLight.on();
-                self.ObjLight.setLight(range.value);
-                self._stateChange();
-                if (range.value == 0) {
-                    self.ObjLight.off();
-                    self._stateChange();
-                }
-            }
-        }
-
-        rangLight();
-        this._stateChange();
-        var count = this.element.children.length; 
-        this.element.insertBefore(range, this.element.children[count -1]);
-        this.element.insertBefore(_light, this.element.children[count -1]);
-        
-    }
-}
 var formFromAddObject = new FormAdd();
 
 
