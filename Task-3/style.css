@@ -1,0 +1,59 @@
+.element {
+   padding: 5px;
+   border: 2px solid black;
+   width: 150px;
+   display:inline-block;
+   margin-right: 10px;
+}
+
+.on {
+   background-color: green;
+}
+
+.off {
+   background-color: red;
+}
+
+label {
+    float:left;
+    padding-right:10px;
+}
+
+.addChannel {
+    display: inline-block;
+    display: inline-flex;
+}
+
+.TV {
+    width: 230px;
+}
+
+#add {
+    clear:both; 
+    text-align:right;
+    float:left;
+}
+
+.add {
+    float:left;
+}
+
+.field {
+    clear:both; 
+    text-align:right; 
+    line-height:25px;
+}
+
+#addChanel {
+    width: 100px;
+}
+
+input#model {
+    width: 105px;
+}
+
+input#type {
+    width: 105px;
+}
+
+
