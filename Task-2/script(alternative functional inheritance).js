@@ -1,4 +1,4 @@
-"use strict";
+﻿"use strict";
 
 function Obj (a,b) {
       var _type = a;
